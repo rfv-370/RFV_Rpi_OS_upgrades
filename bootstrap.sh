@@ -40,19 +40,17 @@ systemctl enable zerotier-one || log "systemctl enable zerotier-one failed"
 systemctl start zerotier-one || log "systemctl start zerotier-one failed"
 log "NOTE: ZeroTier network join must be performed manually after bootstrap!"
 
-DEFAULT_USER=$(awk -F: '$3>=1000 && $1!="nobody" {print $1; exit}' /etc/passwd)
-if [ -n "$DEFAULT_USER" ]; then
-  log "Configuring wayvnc for user $DEFAULT_USER with password $VNC_PASSWORD"
-  sudo -u "$DEFAULT_USER" mkdir -p "/home/$DEFAULT_USER/.config/wayvnc"
-  sudo -u "$DEFAULT_USER" tee "/home/$DEFAULT_USER/.config/wayvnc/config" >/dev/null <<CONF
+# Write wayvnc config to /etc/wayvnc/config (system service uses this by default)
+log "Configuring wayvnc system service with password (see /etc/wayvnc/config)"
+cat >/etc/wayvnc/config <<CONF
 address=0.0.0.0
 rfb_port=5900
 password=$VNC_PASSWORD
 CONF
-  chmod 600 "/home/$DEFAULT_USER/.config/wayvnc/config"
-  systemctl enable "wayvnc@$DEFAULT_USER.service" || log "systemctl enable wayvnc@$DEFAULT_USER failed"
-  systemctl start "wayvnc@$DEFAULT_USER.service" || log "systemctl start wayvnc@$DEFAULT_USER failed"
-fi
+chmod 600 /etc/wayvnc/config
+
+systemctl enable wayvnc.service || log "systemctl enable wayvnc failed"
+systemctl start wayvnc.service || log "systemctl start wayvnc failed"
 
 log "Configuring unattended upgrades"
 cat >/etc/apt/apt.conf.d/20auto-upgrades <<'CONF'
@@ -73,5 +71,4 @@ log "Enabling systemd-timesyncd"
 timedatectl set-ntp true || log "timedatectl set-ntp failed"
 
 log "Bootstrap completed"
-
-log "REMINDER: Locale, timezone, hostname, firewall, and network setup are manual steps as per deployment requirements."
+log "REMINDER: ZeroTier join, locale, timezone, hostname, firewall, and network setup are manual steps as per deployment requirements."
