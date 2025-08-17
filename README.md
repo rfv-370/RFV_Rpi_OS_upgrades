@@ -10,10 +10,15 @@
 
 ### Usage cheat sheet
 
-```sh
+
 wget https://raw.githubusercontent.com/rfv-370/RFV_Rpi_OS_upgrades/main/bootstrap.sh && sudo bash bootstrap.sh
 wget https://raw.githubusercontent.com/rfv-370/RFV_Rpi_OS_upgrades/main/audit.sh && sudo bash audit.sh
 wget https://raw.githubusercontent.com/rfv-370/RFV_Rpi_OS_upgrades/main/re-install.sh && sudo bash re-install.sh <system_audit.json>
+
+sudo ./bootstrap.sh
+sudo ./audit.sh
+sudo ./re-install.sh <system_audit.json>
+
 ```
 
 ## System architecture and rationale

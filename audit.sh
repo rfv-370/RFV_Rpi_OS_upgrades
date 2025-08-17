@@ -157,7 +157,7 @@ for user in $(awk -F: '$3 >= 1000 && $1 != "nobody" {print $1}' /etc/passwd); do
   chmod 600 "$BACKUP_DIR/$tarball"
 
   USER_NAME="$user" HOME_DIR="$home" USER_SHELL="$shell" DOTFILES="$dotfiles_json" SSH_PATHS="$ssh_json" CONFIG_PATHS="$config_json" CRON="$cron_json" TARBALL_NAME="$tarball" \
-  python3 - <<'PY'
+  python3 - <<'PY' >> "$USER_JSONL"
 import os, json
 print(json.dumps({
   "username": os.environ["USER_NAME"],
@@ -169,7 +169,7 @@ print(json.dumps({
   "crontab": json.loads(os.environ["CRON"]),
   "tarball": os.environ["TARBALL_NAME"]
 }))
-PY >> "$USER_JSONL"
+PY
 
 done
 
