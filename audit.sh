@@ -1,5 +1,9 @@
 #!/bin/bash
+# Run as root: sudo ./audit.sh
 set -euo pipefail
+
+# This script must be run with root privileges.
+[ "$EUID" -eq 0 ] || { echo "Run as root (sudo)"; exit 1; }
 
 # ---------- SUMMARY REMARKS ----------
 SUMMARY="
@@ -25,6 +29,9 @@ Remarks:
 "
 
 # ---------- ECHO SUMMARY BEFORE ANY ACTION ----------
+LOG_FILE="./audit.log"
+touch "$LOG_FILE"
+{
 echo "$SUMMARY"
 echo "------------------------------------------------------------"
 echo "A summary of actions that will be performed:"
@@ -46,9 +53,10 @@ echo "- Compile all collected data into a JSON file in the current directory"
 echo
 echo "All output and backup files will be created in: $(pwd)"
 echo "------------------------------------------------------------"
+} | tee -a "$LOG_FILE"
 sleep 2
 
-log() { echo "$(date -Iseconds) $*"; }
+log() { echo "$(date -Iseconds) $*" | tee -a "$LOG_FILE"; }
 
 # Output locations: current directory
 OUTDIR="$(pwd)"
@@ -113,6 +121,8 @@ for keyfile in /etc/ssh/ssh_host_*_key; do
   b64=$(base64 < "$keyfile" | tr -d '\n')
   SSH_HOST_KEYS+=("{\"file\":\"$(basename "$keyfile")\",\"mode\":\"$(stat -c '%a' "$keyfile")\",\"base64\":\"$b64\"}")
 done
+SSH_HOST_KEYS_JSON="$(printf '[%s]' "$(IFS=,; echo "${SSH_HOST_KEYS[*]}")")"
+export SSH_HOST_KEYS_JSON
 
 # --- 7. /etc BACKUP + DIFF ---
 log "Backing up /etc"
@@ -204,16 +214,10 @@ for fw, path in [
 with open('$OUTDIR/etc_diff_${TS}.txt') as f:
     etc_diff = [line.strip() for line in f if line.strip()]
 
-ssh_host_keys = []
-SSH_HOST_KEYS_ENV = os.environ.get("SSH_HOST_KEYS_JSON", "[]")
-try:
-    ssh_host_keys = json.loads(SSH_HOST_KEYS_ENV)
-except Exception:
-    pass
+ssh_host_keys = json.loads(os.environ.get("SSH_HOST_KEYS_JSON", "[]"))
 
 with open('$OUTDIR/etc_backup_${TS}.tgz', 'rb') as f:
     etc_backup_filename = os.path.basename(f.name)
-
 json.dump({
     "packages": packages,
     "enabled_services": enabled_services,
@@ -227,7 +231,7 @@ json.dump({
     "mnt_dirs": mnt_dirs,
     "mnt_mountpoints": mnt_mountpoints,
     "firewall": firewall,
-    "ssh_host_keys": $([ "${#SSH_HOST_KEYS[@]}" -gt 0 ] && printf '[%s]' "$(IFS=,; echo "${SSH_HOST_KEYS[*]}")" || echo '[]'),
+    "ssh_host_keys": ssh_host_keys,
     "etc_backup": etc_backup_filename,
     "etc_diff": etc_diff,
     "remarks": [
