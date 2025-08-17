@@ -1,5 +1,21 @@
 # Raspberry Pi Fleet Bootstrap & Audit
 
+## Quick Summary
+
+- `bootstrap.sh`: prepares a fresh Pi (SSH, ZeroTier, WayVNC, upgrades).
+- `audit.sh`: captures system state and user data into JSON and backups.
+- `re-install.sh`: rebuilds a system from an audit file.
+
+> This summary is for future reference (e.g., 5 years later) to recall the workflow quickly.
+
+### Usage cheat sheet
+
+```sh
+sudo ./bootstrap.sh
+sudo ./audit.sh
+sudo ./re-install.sh <system_audit.json>
+```
+
 ## System architecture and rationale
 
 Each Raspberry Pi boots from an internal SD card that hosts the primary OS and services. A USB stick holds periodic full clones made with `rpi-clone` for manual rollback. Devices reside behind a firewall and communicate over a ZeroTier VPN. Every 3‑5 years the fleet is rebuilt on a fresh OS image to avoid end‑of‑life and security exposure.
