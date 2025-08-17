@@ -3,7 +3,13 @@ set -euo pipefail
 
 # ====== Parameters ======
 LOG_FILE="./bootstrap.log"
-VNC_PASSWORD="xxxYYYzzz-456*\$!"
+# Set your desired WayVNC password before running.
+VNC_PASSWORD="CHANGE_ME"
+
+if [ "$VNC_PASSWORD" = "CHANGE_ME" ]; then
+  echo "Please edit bootstrap.sh and set VNC_PASSWORD before running."
+  exit 1
+fi
 
 # ====== Logging Setup ======
 touch "$LOG_FILE"

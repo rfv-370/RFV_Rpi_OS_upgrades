@@ -19,6 +19,8 @@ if [[ ! -f "$AUDIT_JSON" ]]; then
   exit 1
 fi
 
+[ "$EUID" -eq 0 ] || { echo "Run as root (sudo)"; exit 1; }
+
 log() { echo "$(date -Iseconds) $*" | tee -a "$LOGFILE"; }
 
 log "Starting system re-install from audit: $AUDIT_JSON"
@@ -57,7 +59,7 @@ for user in d['users']:
         print(f"if [ -f '{tar}' ]; then tar xzf '{tar}' -C '{home}' --no-same-owner; chown -R {user['username']}:{user['username']} '{home}'; fi")
     c = user.get("crontab", "")
     if c and c.strip():
-        print(f"echo {json.dumps(c)} | crontab -u {user['username']} -")
+        print(f"printf '%s' {json.dumps(c)} | crontab -u {user['username']} -")
 PY > /tmp/restore_user_files.sh
 chmod +x /tmp/restore_user_files.sh
 AUDIT_JSON="$AUDIT_JSON" /tmp/restore_user_files.sh
